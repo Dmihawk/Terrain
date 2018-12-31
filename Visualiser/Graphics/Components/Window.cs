@@ -67,13 +67,15 @@ namespace Visualiser.Graphics
 				_groundModel = new Object();
 				result &= _groundModel.Initialise(_directX.Device, "plane01.txt", "rock015.bmp");
 
+				_quadTree = new QuadTree();
+				result &= _quadTree.Initialise(_terrain, _directX.Device);
+
 				_foliage = new Foliage();
-				result &= _foliage.Initialise(_directX.Device, "grass01.bmp", 500);
+				result &= _foliage.Initialise(_directX.Device, _quadTree, "grass01.bmp", 2500);
 
 				_frustrum = new Frustrum();
 
-				_quadTree = new QuadTree();
-				result &= _quadTree.Initialise(_terrain, _directX.Device);
+				
 
 				return result;
 			}

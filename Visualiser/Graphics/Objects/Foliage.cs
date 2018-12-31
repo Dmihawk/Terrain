@@ -4,6 +4,7 @@ using SharpDX.Direct3D11;
 using System;
 using Visualiser.Containers;
 using Visualiser.Containers.Vertices;
+using Visualiser.Graphics.Components;
 using Visualiser.Utilities;
 using Buffer = SharpDX.Direct3D11.Buffer;
 
@@ -22,11 +23,11 @@ namespace Visualiser.Graphics.Objects
 		public float WindRotation { get; set; }
 		public int WindDirection { get; set; }
 
-		public bool Initialise(Device device, string textureFileName, int foliageCount)
+		public bool Initialise(Device device, QuadTree quadTree, string textureFileName, int foliageCount)
 		{
 			FoliageCount = foliageCount;
 
-			var result = GeneratePositions();
+			var result = GeneratePositions(quadTree);
 			result &= InitialiseBuffers(device);
 			result &= LoadTexture(device, textureFileName);
 
@@ -86,7 +87,7 @@ namespace Visualiser.Graphics.Objects
 				modelPosition = new Vector3()
 				{
 					X = FoliageArray[i].x,
-					Y = -0.1f,
+					Y = FoliageArray[i].y,
 					Z = FoliageArray[i].z
 				};
 
@@ -174,7 +175,7 @@ namespace Visualiser.Graphics.Objects
 			return true;
 		}
 
-		private bool GeneratePositions()
+		private bool GeneratePositions(QuadTree quadTree)
 		{
 			var maximum = 32767;
 
@@ -184,9 +185,10 @@ namespace Visualiser.Graphics.Objects
 
 			for (int i = 0; i < FoliageCount; ++i)
 			{
-				var testX = (float)random.Next(maximum) / maximum * 9.0f - 4.5f;
-				var testZ = (float)random.Next(maximum) / maximum * 9.0f - 4.5f;
+				var testX = (float)random.Next(maximum) / maximum * 256.0f;
+				var testZ = (float)random.Next(maximum) / maximum * 256.0f;
 				FoliageArray[i].x = testX;
+				quadTree.GetHeightAtPosition(testX, testZ, out FoliageArray[i].y);
 				FoliageArray[i].z = testZ;
 
 				var red = (float)random.Next(maximum) / maximum;
