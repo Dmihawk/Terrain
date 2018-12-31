@@ -21,6 +21,8 @@ namespace Visualiser.Graphics
 		private UserInterface _userInterface;
 		private FrameCounter _frameCounter;
 		private Terrain _terrain;
+		private QuadTree _quadTree;
+		private Frustrum _frustrum;
 
 		public Window()
 		{
@@ -68,6 +70,11 @@ namespace Visualiser.Graphics
 				_foliage = new Foliage();
 				result &= _foliage.Initialise(_directX.Device, "grass01.bmp", 500);
 
+				_frustrum = new Frustrum();
+
+				_quadTree = new QuadTree();
+				result &= _quadTree.Initialise(_terrain, _directX.Device);
+
 				return result;
 			}
 			catch (Exception ex)
@@ -83,6 +90,11 @@ namespace Visualiser.Graphics
 			_player = null;
 			_frameCounter = null;
 			_camera = null;
+
+			_frustrum = null;
+
+			_quadTree?.Shutdown();
+			_quadTree = null;
 
 			_foliage?.Dispose();
 			_foliage = null;
@@ -112,8 +124,15 @@ namespace Visualiser.Graphics
 
 			var result = _input.Frame();
 			result &= HandleInput(frameTime);
+
+			if (_quadTree.GetHeightAtPosition(_camera.Position.X, _camera.Position.Z, out float height))
+			{
+				_camera.Position.Y = height + 2.0f;
+			}
+
 			result &= _userInterface.Frame(_frameCounter.FPS, _player.Position, _player.Rotation, _directX.DeviceContext);
-			result &= _foliage.Frame(_camera.Position, _directX.DeviceContext);
+			result &= _foliage.Frame(_camera.Position, _directX.DeviceContext);			
+
 			result &= Render();
 
 			return result;
@@ -150,6 +169,8 @@ namespace Visualiser.Graphics
 			var projectionMatrix = _directX.ProjectionMatrix;
 			var orthoMatrix = _directX.OrthoMatrix;
 			var baseViewMatrix = _camera.BaseViewMatrix;
+
+
 
 			_groundModel.Render(_directX.DeviceContext);
 			_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);

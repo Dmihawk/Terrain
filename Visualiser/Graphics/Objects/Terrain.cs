@@ -18,7 +18,6 @@ namespace Visualiser.Graphics.Objects
 		private Dimension _size;
 		private Buffer _vertexBuffer;
 		private Buffer _indexBuffer;
-		private int _vertexCount;
 		private int _textureRepeat = 8;
 
 		public Terrain()
@@ -27,8 +26,10 @@ namespace Visualiser.Graphics.Objects
 		}
 
 		public int IndexCount { get; private set; }
+		public int VertexCount { get; private set; }
 		public List<XYZTextureNormalType> HeightMap = new List<XYZTextureNormalType>();
 		public Texture Texture { get; set; }
+		public PositionTextureNormalVertex[] Vertices { get; set; }
 
 		public bool Initialise(Device device, string heightMapFileName, string textureFileName)
 		{
@@ -305,12 +306,13 @@ namespace Visualiser.Graphics.Objects
 			try
 			{
 				/// Calculate the number of vertices in the terrain mesh.
-				_vertexCount = (_size.Width - 1) * (_size.Height - 1) * 6;
-				// Set the index count to the same as the vertex count.
-				IndexCount = _vertexCount;
+				VertexCount = (_size.Width - 1) * (_size.Height - 1) * 6;
 
-				// Create the vertex array.
-				var vertices = new PositionTextureNormalVertex[_vertexCount];
+				Vertices = new PositionTextureNormalVertex[VertexCount];
+
+				// Set the index count to the same as the vertex count.
+				IndexCount = VertexCount;
+
 				// Create the index array.
 				int[] indices = new int[IndexCount];
 
@@ -335,7 +337,7 @@ namespace Visualiser.Graphics.Objects
 						if (tv == 1.0f)
 							tv = 0.0f;
 
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexUpperLeft3].x, HeightMap[indexUpperLeft3].y, HeightMap[indexUpperLeft3].z),
 							texture = new Vector2(HeightMap[indexUpperLeft3].tu, tv),
@@ -353,7 +355,7 @@ namespace Visualiser.Graphics.Objects
 						if (tv == 1.0f)
 							tv = 0.0f;
 
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexUpperRight4].x, HeightMap[indexUpperRight4].y, HeightMap[indexUpperRight4].z),
 							texture = new Vector2(tu, tv),
@@ -362,7 +364,7 @@ namespace Visualiser.Graphics.Objects
 						indices[index] = index++;
 
 						// Bottom left.
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexBottomLeft1].x, HeightMap[indexBottomLeft1].y, HeightMap[indexBottomLeft1].z),
 							texture = new Vector2(HeightMap[indexBottomLeft1].tu, HeightMap[indexBottomLeft1].tv),
@@ -373,7 +375,7 @@ namespace Visualiser.Graphics.Objects
 
 						#region Second Triangle
 						// Bottom left.
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexBottomLeft1].x, HeightMap[indexBottomLeft1].y, HeightMap[indexBottomLeft1].z),
 							texture = new Vector2(HeightMap[indexBottomLeft1].tu, HeightMap[indexBottomLeft1].tv),
@@ -391,7 +393,7 @@ namespace Visualiser.Graphics.Objects
 						if (tv == 1.0f)
 							tv = 0.0f;
 
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexUpperRight4].x, HeightMap[indexUpperRight4].y, HeightMap[indexUpperRight4].z),
 							texture = new Vector2(tu, tv),
@@ -406,7 +408,7 @@ namespace Visualiser.Graphics.Objects
 						if (tu == 0.0f)
 							tu = 1.0f;
 
-						vertices[index] = new PositionTextureNormalVertex()
+						Vertices[index] = new PositionTextureNormalVertex()
 						{
 							position = new Vector3(HeightMap[indexBottomRight2].x, HeightMap[indexBottomRight2].y, HeightMap[indexBottomRight2].z),
 							texture = new Vector2(tu, HeightMap[indexBottomRight2].tv),
@@ -418,13 +420,12 @@ namespace Visualiser.Graphics.Objects
 				}
 
 				// Create the vertex buffer.
-				_vertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, vertices);
+				_vertexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.VertexBuffer, Vertices);
 
 				// Create the index buffer.
 				_indexBuffer = SharpDX.Direct3D11.Buffer.Create(device, BindFlags.IndexBuffer, indices);
 
 				// Release the arrays now that the buffers have been created and loaded.
-				vertices = null;
 				indices = null;
 
 				return true;

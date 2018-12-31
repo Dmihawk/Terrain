@@ -106,6 +106,8 @@
     <Compile Include="Containers\InstanceType.cs" />
     <Compile Include="Containers\LookDirection2D.cs" />
     <Compile Include="Containers\MovementInput.cs" />
+    <Compile Include="Containers\Types\PositionTextureNormalType.cs" />
+    <Compile Include="Containers\Types\QuadTreeNodeType.cs" />
     <Compile Include="Containers\Types\XYZTextureNormalType.cs" />
     <Compile Include="Containers\Sentence.cs" />
     <Compile Include="Containers\SystemConfiguration.cs" />
@@ -116,6 +118,8 @@
     <Compile Include="Containers\Vertices\PositionTextureVertex.cs" />
     <Compile Include="Containers\WindowConfiguration.cs" />
     <Compile Include="Graphics\Components\Font.cs" />
+    <Compile Include="Graphics\Components\Frustrum.cs" />
+    <Compile Include="Graphics\Components\QuadTree.cs" />
     <Compile Include="Graphics\Components\Text.cs" />
     <Compile Include="Graphics\Components\UserInterface.cs" />
     <Compile Include="Graphics\Objects\Camera.cs" />

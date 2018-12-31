@@ -238,7 +238,7 @@ namespace Visualiser.Shaders
 				return false;
 			}
 		}
-		private void RenderShader(DeviceContext deviceContext, int indexCount)
+		public void RenderShader(DeviceContext deviceContext, int indexCount)
 		{
 			// Set the vertex input layout.
 			deviceContext.InputAssembler.InputLayout = Layout;
