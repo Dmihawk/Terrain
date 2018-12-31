@@ -1,0 +1,18 @@
+﻿//////////////////////
+////   TYPES
+//////////////////////
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float4 colour : COLOUR;
+};
+
+//////////////////////
+////   Pixel Shader
+/////////////////////
+float4 ColourPixelShader(PixelInputType input) : SV_TARGET
+{
+	// EX: 5 - Change pixel shader output to half brightness.
+	// input.color.g *= 0.5f;
+	return input.colour;
+}

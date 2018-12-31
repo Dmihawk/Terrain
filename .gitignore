@@ -3,3 +3,10 @@
 ################################################################################
 
 /Test/obj/Debug
+/Test/Visualiser/bin
+/Test/Visualiser/obj/Debug
+/Test/Visualiser/obj
+/Visualiser/bin
+/Visualiser/obj
+/.vs/Test/v15
+/packages
