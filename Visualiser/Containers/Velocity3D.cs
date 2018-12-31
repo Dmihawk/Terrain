@@ -5,7 +5,8 @@ namespace Visualiser.Containers
 	public class Velocity3D
 	{
 		private const float Acceleration = 0.001f;
-		private const float Deceleration = -0.0007f;
+		//private const float Deceleration = -0.0007f;
+		private const float Deceleration = -10.00f;
 
 		public float Forward { get; set; }
 		public float Backward { get; set; }
@@ -22,6 +23,11 @@ namespace Visualiser.Containers
 		public float NetUpward
 		{
 			get { return Upward - Downward; }
+		}
+
+		public float NetRightward
+		{
+			get { return Rightward - Leftward; }
 		}
 
 		public void Update(float frameTime, MovementInput input)

@@ -1,12 +1,17 @@
 ﻿using SharpDX;
 using SharpDX.DirectInput;
 using System;
+using System.Windows.Forms;
 using Visualiser.Containers;
+
+using Point = System.Drawing.Point;
 
 namespace Visualiser.Utilities
 {
 	public class Input : IDisposable
 	{
+		private Point _screenCenter;
+
 		private KeyboardState _keyboardState;
 		public MouseState _mouseState;
 
@@ -14,12 +19,13 @@ namespace Visualiser.Utilities
 		public Keyboard Keyboard { get; set; }
 		public Mouse Mouse { get; set; }
 		public Dimension ScreenSize;
-		public Coordinate2D<int> MousePosition;
+		public Coordinate2D<int> MouseChange;
 
 		public bool Initialise(Dimension screenSize, IntPtr windowHandle)
 		{
+			_screenCenter = new Point(screenSize.Width / 2, screenSize.Height / 2);
 			ScreenSize = new Dimension(screenSize.Width, screenSize.Height);
-			MousePosition = new Coordinate2D<int>(0, 0);
+			MouseChange = new Coordinate2D<int>(0, 0);
 			DirectInput = new DirectInput();
 
 			Keyboard = new Keyboard(DirectInput);
@@ -181,12 +187,14 @@ namespace Visualiser.Utilities
 		{
 			if (_mouseState != null)
 			{
-				MousePosition.X += _mouseState.X;
-				MousePosition.Y += _mouseState.Y;
+				MouseChange.X = _mouseState.X;
+				MouseChange.Y = _mouseState.Y;
 			}
 
-			MousePosition.X = MousePosition.X.Clamp(0, ScreenSize.Width);
-			MousePosition.Y = MousePosition.Y.Clamp(0, ScreenSize.Height);
+			Cursor.Position = _screenCenter;
+
+			//MousePosition.X = MousePosition.X.Clamp(0, ScreenSize.Width);
+			//MousePosition.Y = MousePosition.Y.Clamp(0, ScreenSize.Height);
 		}
 	}
 }

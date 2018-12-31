@@ -24,10 +24,10 @@ namespace Visualiser.Containers
 			ScreenDepth = 1000.0f;
 			ScreenNear = 0.1f;
 			BorderStyle = FormBorderStyle.None;
-			ShaderFilePath = @"C:\Users\gregh\Desktop\Lunch & Learn\Terrain\Visualiser\Shaders\";
-			FontFilePath = @"C:\Users\gregh\Desktop\Lunch & Learn\Terrain\Visualiser\Font\";
-			DataFilePath = @"C:\Users\gregh\Desktop\Lunch & Learn\Terrain\Visualiser\Data\";
-			ModelFilePath = @"C:\Users\gregh\Desktop\Lunch & Learn\Terrain\Visualiser\Models\";
+			ShaderFilePath = @"C:\Programming\Terrain\Visualiser\Shaders\";
+			FontFilePath = @"C:\Programming\Terrain\Visualiser\Font\";
+			DataFilePath = @"C:\Programming\Terrain\Visualiser\Data\";
+			ModelFilePath = @"C:\Programming\Terrain\Visualiser\Models\";
 
 			FullScreen = windowConfiguration.FullScreen;
 			Title = windowConfiguration.Title;

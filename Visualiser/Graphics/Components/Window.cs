@@ -129,8 +129,8 @@ namespace Visualiser.Graphics
 				Rightward = _input.IsKeyPressed(Key.D),
 				Upward = _input.IsKeyPressed(Key.Space),
 				Downward = _input.IsKeyPressed(Key.LeftShift),
-				LookUp = _input.IsKeyPressed(Key.Q),
-				LookDown = _input.IsKeyPressed(Key.Z)
+				LookRight = _input.MouseChange.X,
+				LookDown = _input.MouseChange.Y
 			});
 
 			_camera.Position = _player.Position;

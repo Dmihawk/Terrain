@@ -8,7 +8,8 @@
 		public bool Downward { get; set; }
 		public bool Leftward { get; set; }
 		public bool Rightward { get; set; }
-		public bool LookUp { get; set; }
-		public bool LookDown { get; set; }
+
+		public int LookDown { get; set; }
+		public int LookRight { get; set; }
 	}
 }
