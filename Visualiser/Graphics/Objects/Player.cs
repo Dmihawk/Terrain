@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using System.Diagnostics;
 using Visualiser.Containers;
 using Visualiser.Utilities;
 
@@ -10,20 +11,32 @@ namespace Visualiser.Graphics.Objects
 	{
 		private Velocity3D _velocity;
 		private LookDirection2D _lookDirection;
+		private float _verticalVelocity;
 
 		public Player()
 		{
 			_velocity = new Velocity3D();
 			_lookDirection = new LookDirection2D();
+			_verticalVelocity = 0.0f;
 		}
 
 		public Coordinate3D<float> Position { get; set; }
 		public Coordinate3D<float> Rotation { get; set; }
 
-		public void Update(float frameTime, MovementInput input)
+		public void Update(float frameTime, float heightDifference, MovementInput input)
 		{
 			_velocity.Update(frameTime, input);
 			_lookDirection.Update(frameTime, input);
+
+			if (input.Jump && heightDifference < 0.1f)
+			{
+				_verticalVelocity = 1.0f;
+			}
+
+			if (_verticalVelocity > -10.0f)
+			{
+				_verticalVelocity -= 0.05f;
+			}
 
 			Rotation.X += _lookDirection.Down;
 			Rotation.X = Rotation.X.Clamp(-90, 90);
@@ -40,15 +53,24 @@ namespace Visualiser.Graphics.Objects
 			var sidewaysX = (float)Math.Sin(sideways) * _velocity.NetRightward;
 			var sidewaysZ = (float)Math.Cos(sideways) * _velocity.NetRightward;
 
-			System.Diagnostics.Debug.WriteLine($"Forward: {forwardX}, {forwardZ}; Sideways: {sidewaysX}, {sidewaysZ}");
-
 			var netMovement = new Vector2(forwardX + sidewaysX, forwardZ + sidewaysZ);
 
-			var normalised = Vector2.Normalize(netMovement);
+			var maxVelocity = Constants.MaxVelocity;
 
-			Position.X += normalised.X;
-			Position.Y += _velocity.NetUpward;
-			Position.Z += normalised.Y;
+			if (input.Sprint)
+			{
+				maxVelocity *= 3;
+			}
+
+			if (netMovement.Length() > maxVelocity)
+			{
+				netMovement = Vector2.Normalize(netMovement);
+				netMovement = Vector2.Multiply(netMovement, maxVelocity);
+			}
+
+			Position.X += netMovement.X;
+			Position.Y += _verticalVelocity;
+			Position.Z += netMovement.Y;
 
 			//Position.X += (float)Math.Sin(radians) * _velocity.NetForward;
 			//Position.Y += _velocity.NetUpward;

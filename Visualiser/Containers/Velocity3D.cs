@@ -39,7 +39,12 @@ namespace Visualiser.Containers
 			Upward += (input.Upward ? Acceleration : Deceleration) * frameTime;
 			Downward += (input.Downward ? Acceleration : Deceleration) * frameTime;
 
-			var maxVelocity = frameTime * 0.03f;
+			var maxVelocity = Constants.MaxVelocity;
+
+			if (input.Sprint)
+			{
+				maxVelocity *= 3;
+			}
 
 			Forward = Forward.Clamp(0.0f, maxVelocity);
 			Backward = Backward.Clamp(0.0f, maxVelocity);

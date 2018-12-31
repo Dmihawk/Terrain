@@ -8,7 +8,7 @@
 			model.Initialise(new Containers.WindowConfiguration()
 			{
 				Title = "Visualiser Test",
-				Size = new Containers.Dimension(1920, 1080),
+				Size = new Containers.Dimension(1280, 720),
 				VerticalSync = true,
 				FullScreen = false
 			});

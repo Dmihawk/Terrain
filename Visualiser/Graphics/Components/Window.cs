@@ -123,9 +123,17 @@ namespace Visualiser.Graphics
 			_frameCounter.Frame();
 
 			var result = _input.Frame();
-			result &= HandleInput(frameTime);
+
+			var heightDifference = 0.0f;
 
 			if (_quadTree.GetHeightAtPosition(_camera.Position.X, _camera.Position.Z, out float height))
+			{
+				heightDifference = _camera.Position.Y - (height + 2.0f);
+			}
+
+			result &= HandleInput(frameTime, heightDifference);
+
+			if (_camera.Position.Y < (height + 2.0f))
 			{
 				_camera.Position.Y = height + 2.0f;
 			}
@@ -138,18 +146,20 @@ namespace Visualiser.Graphics
 			return result;
 		}
 
-		private bool HandleInput(float frameTime)
+		private bool HandleInput(float frameTime, float heightDifference)
 		{
-			_player.Update(frameTime, new MovementInput()
+			_player.Update(frameTime, heightDifference, new MovementInput()
 			{
 				Forward = _input.IsKeyPressed(Key.W),
 				Backward = _input.IsKeyPressed(Key.S),
 				Leftward = _input.IsKeyPressed(Key.A),
 				Rightward = _input.IsKeyPressed(Key.D),
-				Upward = _input.IsKeyPressed(Key.Space),
-				Downward = _input.IsKeyPressed(Key.LeftShift),
+				//Upward = _input.IsKeyPressed(Key.Space),
+				//Downward = _input.IsKeyPressed(Key.LeftShift),
 				LookRight = _input.MouseChange.X,
-				LookDown = _input.MouseChange.Y
+				LookDown = _input.MouseChange.Y,
+				Jump = _input.IsKeyPressed(Key.Space),
+				Sprint = _input.IsKeyPressed(Key.LeftShift)
 			});
 
 			_camera.Position = _player.Position;
@@ -169,8 +179,6 @@ namespace Visualiser.Graphics
 			var projectionMatrix = _directX.ProjectionMatrix;
 			var orthoMatrix = _directX.OrthoMatrix;
 			var baseViewMatrix = _camera.BaseViewMatrix;
-
-
 
 			_groundModel.Render(_directX.DeviceContext);
 			_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);

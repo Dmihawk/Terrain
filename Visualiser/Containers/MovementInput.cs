@@ -11,5 +11,8 @@
 
 		public int LookDown { get; set; }
 		public int LookRight { get; set; }
+
+		public bool Jump { get; set; }
+		public bool Sprint { get; set; }
 	}
 }
