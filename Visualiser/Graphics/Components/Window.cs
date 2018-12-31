@@ -20,6 +20,7 @@ namespace Visualiser.Graphics
 		private ShaderManager _shaderManager;
 		private UserInterface _userInterface;
 		private FrameCounter _frameCounter;
+		private Terrain _terrain;
 
 		public Window()
 		{
@@ -58,6 +59,9 @@ namespace Visualiser.Graphics
 				_userInterface = new UserInterface();
 				result &= _userInterface.Initialise(_directX, size);
 
+				_terrain = new Terrain();
+				result &= _terrain.Initialise(_directX.Device, "heightmap01.bmp", "dirt03.bmp");
+
 				_groundModel = new Object();
 				result &= _groundModel.Initialise(_directX.Device, "plane01.txt", "rock015.bmp");
 
@@ -85,6 +89,9 @@ namespace Visualiser.Graphics
 
 			_groundModel?.Dispose();
 			_groundModel = null;
+
+			_terrain?.Dispose();
+			_terrain = null;
 
 			_userInterface?.Dispose();
 			_userInterface = null;
@@ -147,10 +154,17 @@ namespace Visualiser.Graphics
 			_groundModel.Render(_directX.DeviceContext);
 			_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);
 
+			var ambientColour = new Color4(0.05f, 0.05f, 0.05f, 1.0f);
+			var diffuseColour = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+			var direction = new Vector3(-0.5f, -1.0f, 0.0f);
+
+			_terrain.Render(_directX.DeviceContext);
+			var result = _shaderManager.RenderTerrainShader(_directX.DeviceContext, _terrain.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, ambientColour, diffuseColour, direction, _terrain.Texture.TextureResource);
+
 			_directX.EnableSecondBlendState();
 
 			_foliage.Render(_directX.DeviceContext);
-			var result = _shaderManager.RenderFoliageShader(_directX.DeviceContext, _foliage.VertexCount, _foliage.InstanceCount, viewCameraMatrix, projectionMatrix, _foliage.Texture.TextureResource);
+			result &= _shaderManager.RenderFoliageShader(_directX.DeviceContext, _foliage.VertexCount, _foliage.InstanceCount, viewCameraMatrix, projectionMatrix, _foliage.Texture.TextureResource);
 
 			_directX.SetAlphaBlending(false);
 

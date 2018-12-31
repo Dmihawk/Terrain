@@ -102,12 +102,14 @@
     <Compile Include="Containers\Buffers\WorldViewProjectionMatrixBuffer.cs" />
     <Compile Include="Containers\FoliageType.cs" />
     <Compile Include="Containers\FontType.cs" />
+    <Compile Include="Containers\HeightMapType.cs" />
     <Compile Include="Containers\InstanceType.cs" />
     <Compile Include="Containers\LookDirection2D.cs" />
     <Compile Include="Containers\MovementInput.cs" />
-    <Compile Include="Containers\ObjectFormat.cs" />
+    <Compile Include="Containers\Types\XYZTextureNormalType.cs" />
     <Compile Include="Containers\Sentence.cs" />
     <Compile Include="Containers\SystemConfiguration.cs" />
+    <Compile Include="Containers\Types\XYZType.cs" />
     <Compile Include="Containers\Velocity3D.cs" />
     <Compile Include="Containers\Vertices\PositionColourVertex.cs" />
     <Compile Include="Containers\Vertices\PositionTextureNormalVertex.cs" />
@@ -120,6 +122,7 @@
     <Compile Include="Graphics\Objects\Foliage.cs" />
     <Compile Include="Graphics\Objects\Player.cs" />
     <Compile Include="Graphics\Components\Texture.cs" />
+    <Compile Include="Graphics\Objects\Terrain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Shaders\Colour\ColourShader.cs" />
     <Compile Include="Graphics\Components\DirectX.cs" />
@@ -132,6 +135,7 @@
     <Compile Include="Shaders\Font\FontShader.cs" />
     <Compile Include="Shaders\Light\LightShader.cs" />
     <Compile Include="Shaders\ShaderManager.cs" />
+    <Compile Include="Shaders\TerrainShader.cs" />
     <Compile Include="Shaders\Texture\TextureShader.cs" />
     <Compile Include="Utilities\Constants.cs" />
     <Compile Include="Utilities\FPS.cs" />

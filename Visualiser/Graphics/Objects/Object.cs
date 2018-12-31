@@ -25,7 +25,7 @@ namespace Visualiser.Graphics
 
 		public int IndexCount { get; set; }
 		public Texture Texture { get; set; }
-		public ObjectFormat[] ModelObject { get; private set; }
+		public XYZTextureNormalType[] ModelObject { get; private set; }
 
 		public bool Initialise(Device device, string objectFormatFileName, string textureFileName)
 		{
@@ -68,13 +68,13 @@ namespace Visualiser.Graphics
 				var vertextCountString = lines[0].Split(new char[] { ':' })[1].Trim();
 				_vertexCount = int.Parse(vertextCountString);
 				IndexCount = _vertexCount;
-				ModelObject = new ObjectFormat[_vertexCount];
+				ModelObject = new XYZTextureNormalType[_vertexCount];
 
 				for (var i = 4; i < lines.Count && i < 4 + _vertexCount; ++i)
 				{
 					var objectArray = lines[i].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries);
 
-					ModelObject[i - 4] = new ObjectFormat()
+					ModelObject[i - 4] = new XYZTextureNormalType()
 					{
 						x = float.Parse(objectArray[0]),
 						y = float.Parse(objectArray[1]),

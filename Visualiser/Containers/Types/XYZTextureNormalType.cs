@@ -3,7 +3,7 @@
 namespace Visualiser.Containers
 {
 	[StructLayout(LayoutKind.Sequential)]
-	public struct ObjectFormat
+	public struct XYZTextureNormalType
 	{
 		public float x;
 		public float y;
