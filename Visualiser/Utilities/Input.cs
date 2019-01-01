@@ -52,6 +52,7 @@ namespace Visualiser.Utilities
 			try
 			{
 				Mouse.Acquire();
+				Cursor.Hide();
 			}
 			catch (SharpDXException ex)
 			{

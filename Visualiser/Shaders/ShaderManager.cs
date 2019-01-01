@@ -12,6 +12,8 @@ namespace Visualiser.Shaders
 		public FontShader FontShader { get; set; }
 		public FoliageShader FoliageShader { get; set; }
 		public TerrainShader TerrainShader { get; set; }
+		public SkyDomeShader SkyDomeShader { get; set; }
+		public SkyPlaneShader SkyPlaneShader { get; set; }
 
 		public bool Initialise(DirectX directXDevice, IntPtr windowHandle)
 		{
@@ -26,6 +28,12 @@ namespace Visualiser.Shaders
 
 			TerrainShader = new TerrainShader();
 			result &= TerrainShader.Initialise(directXDevice.Device, windowHandle);
+
+			SkyDomeShader = new SkyDomeShader();
+			result &= SkyDomeShader.Initialize(directXDevice.Device, windowHandle);
+
+			SkyPlaneShader = new SkyPlaneShader();
+			result &= SkyPlaneShader.Initialize(directXDevice.Device, windowHandle);
 
 			return result;
 		}
@@ -43,6 +51,12 @@ namespace Visualiser.Shaders
 
 			TerrainShader?.Dispose();
 			TerrainShader = null;
+
+			SkyDomeShader?.ShutDown();
+			SkyDomeShader = null;
+
+			SkyPlaneShader?.ShutDown();
+			SkyPlaneShader = null;
 		}
 
 		public bool RenderTextureShader(DeviceContext deviceContext, int indexCount, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix, ShaderResourceView texture)
@@ -69,6 +83,20 @@ namespace Visualiser.Shaders
 		public bool RenderTerrainShader(DeviceContext deviceContext, int indexCount, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix, Color4 ambientColour, Color4 diffuseColour, Vector3 lightDirection, ShaderResourceView texture)
 		{
 			var result = TerrainShader.Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, ambientColour, diffuseColour, lightDirection, texture);
+
+			return result;
+		}
+
+		public bool RenderSkyDomeShader(DeviceContext deviceContext, int indexCount, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix, Vector4 apexColour, Vector4 centerColor)
+		{
+			var result = SkyDomeShader.Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, apexColour, centerColor);
+
+			return result;
+		}
+
+		public bool RenderSkyPlaneShader(DeviceContext deviceContext, int indexCount, Matrix worldMatrix, Matrix viewMatrix, Matrix projectionMatrix, ShaderResourceView cloudTexture, ShaderResourceView perturbTexture, float translation, float scale, float brightness)
+		{
+			var result = SkyPlaneShader.Render(deviceContext, indexCount, worldMatrix, viewMatrix, projectionMatrix, cloudTexture, perturbTexture, translation, scale, brightness);
 
 			return result;
 		}

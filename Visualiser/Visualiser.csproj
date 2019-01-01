@@ -111,11 +111,13 @@
     <Compile Include="Containers\Types\XYZTextureNormalType.cs" />
     <Compile Include="Containers\Sentence.cs" />
     <Compile Include="Containers\SystemConfiguration.cs" />
+    <Compile Include="Containers\Types\XYZTextureType.cs" />
     <Compile Include="Containers\Types\XYZType.cs" />
     <Compile Include="Containers\Velocity3D.cs" />
     <Compile Include="Containers\Vertices\PositionColourVertex.cs" />
     <Compile Include="Containers\Vertices\PositionTextureNormalVertex.cs" />
     <Compile Include="Containers\Vertices\PositionTextureVertex.cs" />
+    <Compile Include="Containers\Vertices\PositionVertex.cs" />
     <Compile Include="Containers\WindowConfiguration.cs" />
     <Compile Include="Graphics\Components\Font.cs" />
     <Compile Include="Graphics\Components\Frustrum.cs" />
@@ -126,6 +128,8 @@
     <Compile Include="Graphics\Objects\Foliage.cs" />
     <Compile Include="Graphics\Objects\Player.cs" />
     <Compile Include="Graphics\Components\Texture.cs" />
+    <Compile Include="Graphics\Objects\SkyDome.cs" />
+    <Compile Include="Graphics\Objects\SkyPlane.cs" />
     <Compile Include="Graphics\Objects\Terrain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Shaders\Colour\ColourShader.cs" />
@@ -139,6 +143,8 @@
     <Compile Include="Shaders\Font\FontShader.cs" />
     <Compile Include="Shaders\Light\LightShader.cs" />
     <Compile Include="Shaders\ShaderManager.cs" />
+    <Compile Include="Shaders\SkyDomeShader.cs" />
+    <Compile Include="Shaders\SkyPlaneShader.cs" />
     <Compile Include="Shaders\TerrainShader.cs" />
     <Compile Include="Shaders\Texture\TextureShader.cs" />
     <Compile Include="Utilities\Constants.cs" />

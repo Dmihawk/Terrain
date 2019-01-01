@@ -27,8 +27,8 @@ namespace Visualiser.Containers
 
 		public void Update(float frameTime, MovementInput input)
 		{
-			Right = input.LookRight;
-			Down = input.LookDown;
+			Right = input.LookRight / 2;
+			Down = input.LookDown / 2;
 
 			//Left += input.LookRight * frameTime;
 			//Right += (input.Rightward ? Acceleration : Deceleration) * frameTime;

@@ -21,6 +21,7 @@ namespace Visualiser.Graphics
 		private Texture2D _depthStencilBuffer;
 		private DepthStencilView _depthStencilView;
 		private RasterizerState _rasterState;
+		private RasterizerState _rasterStateNoCulling;
 
 		public DirectX()
 		{
@@ -39,6 +40,7 @@ namespace Visualiser.Graphics
 		public BlendState AlphaEnableBlendingState { get; private set; }
 		public BlendState AlphaDisableBlendingState { get; private set; }
 		public BlendState AlphaAdditiveBlendState2 { get; private set; }
+		public BlendState AlphaCloudBlendState { get; private set; }
 		public ViewportF ViewPort { get; set; }
 
 		public bool Initialise(Dimension size, IntPtr windowHandle)
@@ -124,11 +126,25 @@ namespace Visualiser.Graphics
 			DeviceContext.OutputMerger.SetDepthStencilState(depthStencilState, 1);
 		}
 
+		public void SetCulling(bool on)
+		{
+			var state = on ? _rasterState : _rasterStateNoCulling;
+
+			DeviceContext.Rasterizer.State = state;
+		}
+
 		public void EnableSecondBlendState()
 		{
 			var blendFactor = new Color4(0, 0, 0, 0);
 
 			DeviceContext.OutputMerger.SetBlendState(AlphaAdditiveBlendState2, blendFactor, -1);
+		}
+
+		public void EnableCloudBlendState()
+		{
+			var blendFactor = new Color4(0, 0, 0, 0);
+
+			DeviceContext.OutputMerger.SetBlendState(AlphaCloudBlendState, blendFactor, -1);
 		}
 
 		public void BeginScene(Color4 colour)
@@ -294,6 +310,22 @@ namespace Visualiser.Graphics
 			DeviceContext.Rasterizer.State = _rasterState;
 			ViewPort = new ViewportF(0.0f, 0.0f, size.Width, size.Height, 0.0f, 1.0f);
 			DeviceContext.Rasterizer.SetViewport(ViewPort);
+
+			var rasterNoCullDescription = new RasterizerStateDescription()
+			{
+				IsAntialiasedLineEnabled = false,
+				CullMode = CullMode.None,
+				DepthBias = 0,
+				DepthBiasClamp = .0f,
+				IsDepthClipEnabled = true,
+				FillMode = FillMode.Solid,
+				IsFrontCounterClockwise = false,
+				IsMultisampleEnabled = false,
+				IsScissorEnabled = false,
+				SlopeScaledDepthBias = 0.0f
+			};
+
+			_rasterStateNoCulling = new RasterizerState(Device, rasterNoCullDescription);
 		}
 
 		private void SetMatrices(Dimension size)
@@ -377,6 +409,18 @@ namespace Visualiser.Graphics
 			secondaryBlendStateDescription.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
 
 			AlphaAdditiveBlendState2 = new BlendState(Device, secondaryBlendStateDescription);
+
+			BlendStateDescription secBlendStateDesc = new BlendStateDescription();
+			secBlendStateDesc.RenderTarget[0].IsBlendEnabled = true;
+			secBlendStateDesc.RenderTarget[0].SourceBlend = BlendOption.One;
+			secBlendStateDesc.RenderTarget[0].DestinationBlend = BlendOption.One;
+			secBlendStateDesc.RenderTarget[0].BlendOperation = BlendOperation.Add;
+			secBlendStateDesc.RenderTarget[0].SourceAlphaBlend = BlendOption.One;
+			secBlendStateDesc.RenderTarget[0].DestinationAlphaBlend = BlendOption.Zero;
+			secBlendStateDesc.RenderTarget[0].AlphaBlendOperation = BlendOperation.Add;
+			secBlendStateDesc.RenderTarget[0].RenderTargetWriteMask = ColorWriteMaskFlags.All;
+
+			AlphaCloudBlendState = new BlendState(Device, secBlendStateDesc);
 		}
 	}
 }

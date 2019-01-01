@@ -23,6 +23,8 @@ namespace Visualiser.Graphics
 		private Terrain _terrain;
 		private QuadTree _quadTree;
 		private Frustrum _frustrum;
+		private SkyDome _skyDome;
+		private SkyPlane _skyPlane;
 
 		public Window()
 		{
@@ -46,8 +48,8 @@ namespace Visualiser.Graphics
 
 				_player = new Player
 				{
-					Position = new Coordinate3D<float>(0.0f, 1.5f, -4.0f),
-					Rotation = new Coordinate3D<float>(15.0f, 0.0f, 0.0f)
+					Position = new Coordinate3D<float>(31.0f, 18.0f, 7.0f),
+					Rotation = new Coordinate3D<float>(11.0f, 23.0f, 0.0f)
 				};
 
 				_camera = new Camera();
@@ -75,7 +77,11 @@ namespace Visualiser.Graphics
 
 				_frustrum = new Frustrum();
 
-				
+				_skyDome = new SkyDome();
+				result &= _skyDome.Initialise(_directX.Device);
+
+				_skyPlane = new SkyPlane();
+				result &= _skyPlane.Initialze(_directX.Device, "cloud001.bmp", "perturb001.bmp");
 
 				return result;
 			}
@@ -94,6 +100,13 @@ namespace Visualiser.Graphics
 			_camera = null;
 
 			_frustrum = null;
+
+
+			_skyPlane.ShurDown();
+			_skyPlane = null;
+
+			_skyDome.ShutDown();
+			_skyDome = null;
 
 			_quadTree?.Shutdown();
 			_quadTree = null;
@@ -141,7 +154,9 @@ namespace Visualiser.Graphics
 			}
 
 			result &= _userInterface.Frame(_frameCounter.FPS, _player.Position, _player.Rotation, _directX.DeviceContext);
-			result &= _foliage.Frame(_camera.Position, _directX.DeviceContext);			
+			result &= _foliage.Frame(_camera.Position, _directX.DeviceContext);
+
+			_skyPlane.Frame();
 
 			result &= Render();
 
@@ -172,7 +187,7 @@ namespace Visualiser.Graphics
 
 		private bool Render()
 		{
-			_directX.BeginScene(new Color4(0.0f, 0.0f, 1.0f, 1.0f));
+			_directX.BeginScene(new Color4(0.0f, 0.0f, 0.0f, 1.0f));
 
 			_camera.Render();
 
@@ -182,15 +197,33 @@ namespace Visualiser.Graphics
 			var orthoMatrix = _directX.OrthoMatrix;
 			var baseViewMatrix = _camera.BaseViewMatrix;
 
-			_groundModel.Render(_directX.DeviceContext);
-			_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);
+			//_groundModel.Render(_directX.DeviceContext);
+			//_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);
 
 			var ambientColour = new Color4(0.05f, 0.05f, 0.05f, 1.0f);
 			var diffuseColour = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
 			var direction = new Vector3(-0.5f, -1.0f, 0.0f);
 
-			_terrain.Render(_directX.DeviceContext);
-			var result = _shaderManager.RenderTerrainShader(_directX.DeviceContext, _terrain.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, ambientColour, diffuseColour, direction, _terrain.Texture.TextureResource);
+			var result = true;
+
+			Matrix.Translation(_camera.Position.X, _camera.Position.Y, _camera.Position.Z, out worldMatrix);
+
+			_directX.SetCulling(false);
+			_directX.SetZBuffer(false);
+
+			_skyDome.Render(_directX.DeviceContext);
+			result = _shaderManager.RenderSkyDomeShader(_directX.DeviceContext, _skyDome.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyDome.ApexColour, _skyDome.CenterColour);
+
+			_directX.SetCulling(true);
+
+			_directX.EnableCloudBlendState();
+
+			_skyPlane.Render(_directX.DeviceContext);
+			result &= _shaderManager.RenderSkyPlaneShader(_directX.DeviceContext, _skyPlane.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyPlane.CloudTexture.TextureResource, _skyPlane.PerturbTexture.TextureResource, _skyPlane.Translation, _skyPlane.Scale, _skyPlane.Brightness);
+
+			worldMatrix = _directX.WorldMatrix;
+
+			_directX.SetZBuffer(true);
 
 			_directX.EnableSecondBlendState();
 
@@ -198,8 +231,17 @@ namespace Visualiser.Graphics
 			result &= _shaderManager.RenderFoliageShader(_directX.DeviceContext, _foliage.VertexCount, _foliage.InstanceCount, viewCameraMatrix, projectionMatrix, _foliage.Texture.TextureResource);
 
 			_directX.SetAlphaBlending(false);
+			
+			_terrain.Render(_directX.DeviceContext);
+			result = _shaderManager.RenderTerrainShader(_directX.DeviceContext, _terrain.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, ambientColour, diffuseColour, direction, _terrain.Texture.TextureResource);
+
+			_directX.SetZBuffer(false);
+			_directX.SetAlphaBlending(true);
 
 			_userInterface.Render(_directX, _shaderManager, worldMatrix, baseViewMatrix, orthoMatrix);
+
+			_directX.SetAlphaBlending(false);
+			_directX.SetZBuffer(true);
 
 			_directX.EndScene();
 
