@@ -2,6 +2,7 @@
 using SharpDX.DirectInput;
 using System;
 using Visualiser.Containers;
+using Visualiser.Environment;
 using Visualiser.Graphics.Components;
 using Visualiser.Graphics.Objects;
 using Visualiser.Shaders;
@@ -137,6 +138,8 @@ namespace Visualiser.Graphics
 		{
 			_frameCounter.Frame();
 
+			TimeOfDay.Frame(frameTime);
+
 			var result = _input.Frame();
 
 			var heightDifference = 0.0f;
@@ -201,8 +204,12 @@ namespace Visualiser.Graphics
 			//_shaderManager.RenderTextureShader(_directX.DeviceContext, _groundModel.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _groundModel.Texture.TextureResource);
 
 			var ambientColour = new Color4(0.05f, 0.05f, 0.05f, 1.0f);
-			var diffuseColour = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
-			var direction = new Vector3(-0.5f, -1.0f, 0.0f);
+			//var diffuseColour = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+			//var diffuseColour = new Color4(1.0f, 1.0f, 1.0f, 1.0f);
+			//var direction = new Vector3(-0.5f, -1.0f, 0.0f);
+
+			var direction = TimeOfDay.GetSunDirection();
+			var diffuseColour = TimeOfDay.AmbientColour;
 
 			var result = true;
 
@@ -212,14 +219,16 @@ namespace Visualiser.Graphics
 			_directX.SetZBuffer(false);
 
 			_skyDome.Render(_directX.DeviceContext);
-			result = _shaderManager.RenderSkyDomeShader(_directX.DeviceContext, _skyDome.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyDome.ApexColour, _skyDome.CenterColour);
+			//result = _shaderManager.RenderSkyDomeShader(_directX.DeviceContext, _skyDome.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyDome.ApexColour, _skyDome.CenterColour);
+			result = _shaderManager.RenderSkyDomeShader(_directX.DeviceContext, _skyDome.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, TimeOfDay.SkyColour, TimeOfDay.HorizonColour);
 
 			_directX.SetCulling(true);
 
 			_directX.EnableCloudBlendState();
 
 			_skyPlane.Render(_directX.DeviceContext);
-			result &= _shaderManager.RenderSkyPlaneShader(_directX.DeviceContext, _skyPlane.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyPlane.CloudTexture.TextureResource, _skyPlane.PerturbTexture.TextureResource, _skyPlane.Translation, _skyPlane.Scale, _skyPlane.Brightness);
+			//result &= _shaderManager.RenderSkyPlaneShader(_directX.DeviceContext, _skyPlane.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyPlane.CloudTexture.TextureResource, _skyPlane.PerturbTexture.TextureResource, _skyPlane.Translation, _skyPlane.Scale, _skyPlane.Brightness);
+			result &= _shaderManager.RenderSkyPlaneShader(_directX.DeviceContext, _skyPlane.IndexCount, worldMatrix, viewCameraMatrix, projectionMatrix, _skyPlane.CloudTexture.TextureResource, _skyPlane.PerturbTexture.TextureResource, _skyPlane.Translation, _skyPlane.Scale, TimeOfDay.CloudBrightness);
 
 			worldMatrix = _directX.WorldMatrix;
 

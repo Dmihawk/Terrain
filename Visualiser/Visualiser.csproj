@@ -119,6 +119,7 @@
     <Compile Include="Containers\Vertices\PositionTextureVertex.cs" />
     <Compile Include="Containers\Vertices\PositionVertex.cs" />
     <Compile Include="Containers\WindowConfiguration.cs" />
+    <Compile Include="Environment\TimeOfDay.cs" />
     <Compile Include="Graphics\Components\Font.cs" />
     <Compile Include="Graphics\Components\Frustrum.cs" />
     <Compile Include="Graphics\Components\QuadTree.cs" />
@@ -151,6 +152,7 @@
     <Compile Include="Utilities\FPS.cs" />
     <Compile Include="Utilities\Input.cs" />
     <Compile Include="Utilities\Math.cs" />
+    <Compile Include="Utilities\Settings.cs" />
     <Compile Include="Utilities\Timer.cs" />
   </ItemGroup>
   <ItemGroup>
