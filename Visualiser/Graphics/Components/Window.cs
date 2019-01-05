@@ -185,6 +185,18 @@ namespace Visualiser.Graphics
 			_camera.Position = _player.Position;
 			_camera.Rotation = _player.Rotation;
 
+			if (_input.IsKeyPressed(Key.E))
+			{
+				_terrain.ChangeHeightAtPosition(_directX.Device, (int)_player.Position.X, (int)_player.Position.Z, 1.0f);
+				_quadTree.Initialise(_terrain, _directX.Device);
+			}
+
+			if (_input.IsKeyPressed(Key.Q))
+			{
+				_terrain.ChangeHeightAtPosition(_directX.Device, (int)_player.Position.X, (int)_player.Position.Z, -1.0f);
+				_quadTree.Initialise(_terrain, _directX.Device);
+			}
+
 			return !_input.IsKeyPressed(Key.Escape);
 		}
 

@@ -40,9 +40,9 @@ namespace Visualiser.Environment
 		{
 			_currentTime += frameTime;
 
-			if (_currentTime > Settings.LengthOfDay)
+			if (_currentTime > Settings.LengthOfDay.TotalMilliseconds)
 			{
-				_currentTime -= Settings.LengthOfDay;
+				_currentTime -= (float)Settings.LengthOfDay.TotalMilliseconds;
 			}
 
 			UpdateSun();
@@ -52,9 +52,9 @@ namespace Visualiser.Environment
 		{
 			var direction = Vector3.Zero;
 
-			if (_currentTime < Settings.LengthOfDay / 2)
+			if (_currentTime < Settings.LengthOfDay.TotalMilliseconds / 2)
 			{
-				var fractionOfDay = _currentTime / (Settings.LengthOfDay / 2);
+				var fractionOfDay = _currentTime / (Settings.LengthOfDay.TotalMilliseconds / 2);
 
 				direction.Y = (float)Math.Sin(fractionOfDay * Constants.Pi) * -1.0f;
 			}
@@ -64,13 +64,13 @@ namespace Visualiser.Environment
 
 		private static void UpdateSun()
 		{
-			if (_currentTime < Settings.LengthOfDay / 2)
+			if (_currentTime < Settings.LengthOfDay.TotalMilliseconds / 2)
 			{
-				var fractionOfDay = _currentTime / (Settings.LengthOfDay / 2);
+				var fractionOfDay = _currentTime / (Settings.LengthOfDay.TotalMilliseconds / 2);
 
 				if (fractionOfDay <= 0.25f)
 				{
-					UpdateSunrise(fractionOfDay * 4.0f);
+					UpdateSunrise((float)fractionOfDay * 4.0f);
 				}
 				else if (fractionOfDay < 0.75f)
 				{
@@ -81,7 +81,7 @@ namespace Visualiser.Environment
 				}
 				else
 				{
-					UpdateSunset((fractionOfDay - 0.75f) * 4.0f);
+					UpdateSunset(((float)fractionOfDay - 0.75f) * 4.0f);
 				}
 			}
 		}

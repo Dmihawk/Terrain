@@ -28,36 +28,57 @@ namespace Visualiser.Graphics.Components
 		// Methods
 		public bool Initialise(Terrain terrain, Device device)
 		{
-			// Get the number of vertices in the terrain vertex array.
 			int vertexCount = terrain.VertexCount;
 
-			// Store the total triangle count for the vertex list.
 			TriangleCount = vertexCount / 3;
 
-			// Create a vertex array to hold all of the terrain vertices.
 			VertexList = new PositionTextureNormalVertex[vertexCount];
 
-			// Copy the terrain vertices into the vertex list.
 			VertexList = terrain.Vertices;
 
-			// Calculate the center x,z and the width of the mesh.
-			float centerX, centerZ, width;
-			CalculateMeshDimensions(vertexCount, out centerX, out centerZ, out width);
+			CalculateMeshDimensions(vertexCount, out float centerX, out float centerZ, out float width);
 
-			// Create the parent node for the quad tree.
 			ParentNode = new QuadTreeNodeType();
-			QuadTreeNodeType createdNode;
 
-			// Recursively build the quad tree based on the vertex list data and mesh dimensions.
-			// ParentNode = CreateTreeNode(device, centerX, centerZ, width);
-			CreateTreeNode2(device, ParentNode, centerX, centerZ, width, out createdNode);
+			CreateTreeNode2(device, ParentNode, centerX, centerZ, width, out QuadTreeNodeType createdNode);
 			ParentNode = createdNode;
 
-			// Release the vertex list since the quad tree now has the vertices in each node.
 			VertexList = null;
 
 			return true;
 		}
+
+		public void Shutdown()
+		{
+			ReleaseNode(ParentNode);
+		}
+
+		public void Render(DeviceContext deviceContext, Frustrum frustrum, TerrainShader terrainShader)
+		{
+			// Reset the number of the triangles that are drawn for this frame.
+			DrawCount = 0;
+
+			// Render each node that is visible at the parent node and moving down the tree.
+			RenderNode(deviceContext, ParentNode, frustrum, terrainShader);
+		}
+
+		public bool GetHeightAtPosition(float positionX, float positionZ, out float height)
+		{
+			height = 0.0f;
+
+			float meshMinX = ParentNode.positionX - (ParentNode.width / 2.0f);
+			float meshMaxX = ParentNode.positionX + (ParentNode.width / 2.0f);
+			float meshMinZ = ParentNode.positionZ - (ParentNode.width / 2.0f);
+			float meshMaxZ = ParentNode.positionZ + (ParentNode.width / 2.0f);
+
+			// Make sure the coordinates are actually over a polygon.
+			if ((positionX < meshMinX) || (positionX > meshMaxX) || (positionZ < meshMinZ) || (positionZ > meshMaxZ))
+				return false;
+
+			// Find the node which contains the polygon for this position.
+			return FindNode(ParentNode, positionX, positionZ, out height);
+		}
+
 		private void CreateTreeNode2(SharpDX.Direct3D11.Device device, QuadTreeNodeType node, float positionX, float positionZ, float width, out QuadTreeNodeType createdNode)
 		{
 			// Store the node position and size.
@@ -188,22 +209,6 @@ namespace Visualiser.Graphics.Components
 			createdNode = node;
 
 			return;
-		}
-		public bool GetHeightAtPosition(float positionX, float positionZ, out float height)
-		{
-			height = 0.0f;
-
-			float meshMinX = ParentNode.positionX - (ParentNode.width / 2.0f);
-			float meshMaxX = ParentNode.positionX + (ParentNode.width / 2.0f);
-			float meshMinZ = ParentNode.positionZ - (ParentNode.width / 2.0f);
-			float meshMaxZ = ParentNode.positionZ + (ParentNode.width / 2.0f);
-
-			// Make sure the coordinates are actually over a polygon.
-			if ((positionX < meshMinX) || (positionX > meshMaxX) || (positionZ < meshMinZ) || (positionZ > meshMaxZ))
-				return false;
-
-			// Find the node which contains the polygon for this position.
-			return FindNode(ParentNode, positionX, positionZ, out height);
 		}
 		private bool FindNode(QuadTreeNodeType node, float x, float z, out float height)
 		{
@@ -474,10 +479,6 @@ namespace Visualiser.Graphics.Components
 			// Calculate the maximum diameter of the mesh.
 			meshWidth = Math.Max(maxX, maxZ) * 2.0f;
 		}
-		public void Shutdown()
-		{
-			ReleaseNode(ParentNode);
-		}
 		private void ReleaseNode(QuadTreeNodeType theNode)
 		{
 			// Watch to see if this actually closes the Node structs.
@@ -498,14 +499,6 @@ namespace Visualiser.Graphics.Components
 			// Release the index buffer for this node
 			theNode.IndexBuffer?.Dispose();
 			theNode.IndexBuffer = null;
-		}
-		public void Render(DeviceContext deviceContext, Frustrum frustrum, TerrainShader terrainShader)
-		{
-			// Reset the number of the triangles that are drawn for this frame.
-			DrawCount = 0;
-
-			// Render each node that is visible at the parent node and moving down the tree.
-			RenderNode(deviceContext, ParentNode, frustrum, terrainShader);
 		}
 		private void RenderNode(DeviceContext deviceContext, QuadTreeNodeType node, Frustrum frustrum, TerrainShader terrainShader)
 		{

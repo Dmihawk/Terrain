@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Visualiser.Containers;
 using Visualiser.Containers.Types;
 using Visualiser.Containers.Vertices;
@@ -18,7 +16,7 @@ namespace Visualiser.Graphics.Objects
 		private Dimension _size;
 		private Buffer _vertexBuffer;
 		private Buffer _indexBuffer;
-		private int _textureRepeat = 8;
+		private readonly int _textureRepeat = 8;
 
 		public Terrain()
 		{
@@ -66,6 +64,54 @@ namespace Visualiser.Graphics.Objects
 		public void Render(DeviceContext deviceContext)
 		{
 			RenderBuffers(deviceContext);
+		}
+
+		public void ChangeHeightAtPosition(Device device, int x, int z, float height)
+		{
+			var index = (z * _size.Width) + x;
+
+			ChangeHeight(index, height);
+
+			var topLeft = index - (_size.Width) - 1;
+			var topMiddle = index - (_size.Width);
+			var topRight = index - _size.Width + 1;
+			var left = index - 1;
+			var right = index + 1;
+			var bottomLeft = index + (_size.Width) - 1;
+			var bottomMiddle = index + _size.Width;
+			var bottomRight = index + _size.Width + 1;
+
+			ChangeHeight(topLeft, height / 2);
+			ChangeHeight(topMiddle, height / 2);
+			ChangeHeight(topRight, height / 2);
+			ChangeHeight(left, height / 2);
+			ChangeHeight(right, height / 2);
+			ChangeHeight(bottomLeft, height / 2);
+			ChangeHeight(bottomMiddle, height / 2);
+			ChangeHeight(bottomRight, height / 2);
+
+			CalculateNormals();
+
+			//CalculateTextureCoordinates();
+
+			InitialiseBuffers(device);
+		}
+
+		private void ChangeHeight(int index, float height)
+		{
+			var original = HeightMap[index];
+
+			HeightMap[index] = new XYZTextureNormalType()
+			{
+				x = original.x,
+				y = original.y + height,
+				z = original.z,
+				tu = original.tu,
+				tv = original.tv,
+				nx = original.nx,
+				ny = original.ny,
+				nz = original.nz
+			};
 		}
 
 		private void NormaliseHeightMap()

@@ -1,4 +1,6 @@
-﻿namespace Visualiser
+﻿using Visualiser.Utilities;
+
+namespace Visualiser
 {
 	class Program
 	{
@@ -8,7 +10,7 @@
 			model.Initialise(new Containers.WindowConfiguration()
 			{
 				Title = "Visualiser Test",
-				Size = new Containers.Dimension(1920, 1080),
+				Size = Settings.ScreenSize,
 				VerticalSync = true,
 				FullScreen = false
 			});
