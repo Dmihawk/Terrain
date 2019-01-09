@@ -19,6 +19,8 @@ namespace Visualiser.Graphics.Components
 	{
 		private readonly int MAX_TRIANGLES = 10000;
 
+		//private PositionTextureNormalVertex[] _vertexList;
+
 		// Properties
 		public int TriangleCount { get; set; }
 		public int DrawCount { get; set; }
@@ -41,6 +43,7 @@ namespace Visualiser.Graphics.Components
 			ParentNode = new QuadTreeNodeType();
 
 			CreateTreeNode2(device, ParentNode, centerX, centerZ, width, out QuadTreeNodeType createdNode);
+
 			ParentNode = createdNode;
 
 			VertexList = null;

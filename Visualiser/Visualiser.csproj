@@ -100,6 +100,7 @@
     <Compile Include="Containers\Coordinate3D.cs" />
     <Compile Include="Containers\Dimension.cs" />
     <Compile Include="Containers\Buffers\WorldViewProjectionMatrixBuffer.cs" />
+    <Compile Include="Containers\Enums\RelativePosition.cs" />
     <Compile Include="Containers\FoliageType.cs" />
     <Compile Include="Containers\FontType.cs" />
     <Compile Include="Containers\HeightMapType.cs" />
@@ -162,6 +163,9 @@
     <None Include="Shaders\Colour\Colour.vs" />
     <None Include="Shaders\Light\Light.ps" />
     <None Include="Shaders\Light\Light.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Containers\Caches\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

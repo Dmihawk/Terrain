@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Visualiser.Containers;
+using Visualiser.Containers.Enums;
 using Visualiser.Containers.Types;
 using Visualiser.Containers.Vertices;
 using Buffer = SharpDX.Direct3D11.Buffer;
@@ -21,6 +22,7 @@ namespace Visualiser.Graphics.Objects
 		public Terrain()
 		{
 			_size = new Dimension();
+			_cachedNormals = new Dictionary<Coordinate2D<int>, XYZType>();
 		}
 
 		public int IndexCount { get; private set; }
@@ -68,33 +70,82 @@ namespace Visualiser.Graphics.Objects
 
 		public void ChangeHeightAtPosition(Device device, int x, int z, float height)
 		{
-			var index = (z * _size.Width) + x;
+			var index = GetIndexFromPosition(x, z);
 
 			ChangeHeight(index, height);
 
-			var topLeft = index - (_size.Width) - 1;
-			var topMiddle = index - (_size.Width);
-			var topRight = index - _size.Width + 1;
-			var left = index - 1;
-			var right = index + 1;
-			var bottomLeft = index + (_size.Width) - 1;
-			var bottomMiddle = index + _size.Width;
-			var bottomRight = index + _size.Width + 1;
+			var halfHeight = height / 2;
 
-			ChangeHeight(topLeft, height / 2);
-			ChangeHeight(topMiddle, height / 2);
-			ChangeHeight(topRight, height / 2);
-			ChangeHeight(left, height / 2);
-			ChangeHeight(right, height / 2);
-			ChangeHeight(bottomLeft, height / 2);
-			ChangeHeight(bottomMiddle, height / 2);
-			ChangeHeight(bottomRight, height / 2);
+			ChangeHeight(GetRelativeIndex(RelativePosition.TopLeft, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.TopMiddle, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.TopRight, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.Left, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.Right, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.BottomLeft, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.BottomMiddle, index), halfHeight);
+			ChangeHeight(GetRelativeIndex(RelativePosition.BottomRight, index), halfHeight);
 
-			CalculateNormals();
+			UpdateNormal(x - 1, z - 1);
+			UpdateNormal(x, z - 1);
+			UpdateNormal(x + 1, z - 1);
 
-			//CalculateTextureCoordinates();
+			UpdateNormal(x - 1, z);
+			UpdateNormal(x, z);
+			UpdateNormal(x + 1, z);
+
+			UpdateNormal(x - 1, z + 1);
+			UpdateNormal(x, z + 1);
+			UpdateNormal(x + 1, z + 1);
 
 			InitialiseBuffers(device);
+		}
+
+		private int GetIndexFromPosition(int x, int z)
+		{
+			return (z * _size.Width) + x;
+		}
+
+		private int GetRelativeIndex(RelativePosition position, int index)
+		{
+			var relativeIndex = -1;
+			var width = _size.Width;
+
+			switch (position)
+			{
+				case RelativePosition.TopLeft:
+					relativeIndex = index - width - 1;
+					break;
+
+				case RelativePosition.TopMiddle:
+					relativeIndex = index - width;
+					break;
+
+				case RelativePosition.TopRight:
+					relativeIndex = index - width + 1;
+					break;
+
+				case RelativePosition.Left:
+					relativeIndex = index - 1;
+					break;
+
+				case RelativePosition.Right:
+					relativeIndex = index + 1;
+					break;
+
+				case RelativePosition.BottomLeft:
+					relativeIndex = index + width - 1;
+					break;
+
+				case RelativePosition.BottomMiddle:
+					relativeIndex = index + width;
+					break;
+
+				case RelativePosition.BottomRight:
+					relativeIndex = index + width + 1;
+					break;
+			}
+
+			return relativeIndex;
 		}
 
 		private void ChangeHeight(int index, float height)
@@ -111,6 +162,23 @@ namespace Visualiser.Graphics.Objects
 				nx = original.nx,
 				ny = original.ny,
 				nz = original.nz
+			};
+		}
+
+		private void ChangeNormal(int index, float nx, float ny, float nz)
+		{
+			var original = HeightMap[index];
+
+			HeightMap[index] = new XYZTextureNormalType()
+			{
+				x = original.x,
+				y = original.y,
+				z = original.z,
+				tu = original.tu,
+				tv = original.tv,
+				nx = nx,
+				ny = ny,
+				nz = nz
 			};
 		}
 
@@ -187,127 +255,328 @@ namespace Visualiser.Graphics.Objects
 			}
 		}
 
-		private bool CalculateNormals()
+		private XYZType GetNormalForPosition(int x, int z)
 		{
-			// Create a temporary array to hold the un-normalized normal vectors.
-			int index;
-			float length;
-			Vector3 vertex1, vertex2, vertex3, vector1, vector2, sum;
-			var normals = new XYZType[(_size.Height - 1) * (_size.Width - 1)];
+			var index = GetIndexFromPosition(x, z);
+			var right = GetRelativeIndex(RelativePosition.Right, index);
+			var bottom = GetRelativeIndex(RelativePosition.BottomMiddle, index);
 
-			// Go through all the faces in the mesh and calculate their normals.
-			for (int j = 0; j < (_size.Height - 1); j++)
+			var vertex1 = new Vector3(HeightMap[index].x, HeightMap[index].y, HeightMap[index].z);
+			var vertex2 = new Vector3(HeightMap[right].x, HeightMap[right].y, HeightMap[right].z);
+			var vertex3 = new Vector3(HeightMap[bottom].x, HeightMap[bottom].y, HeightMap[bottom].z);
+
+			var vector1 = vertex1 - vertex3;
+			var vector2 = vertex3 - vertex2;
+
+			var crossProduct = Vector3.Cross(vector1, vector2);
+
+			var normal = new XYZType()
 			{
-				for (int i = 0; i < (_size.Width - 1); i++)
+				x = crossProduct.X,
+				y = crossProduct.Y,
+				z = crossProduct.Z
+			};
+
+			return normal;
+		}
+
+		private bool PositionNotOnLeftBorder(int x)
+		{
+			return x >= 1;
+		}
+
+		private bool PositionNotOnSampleRightBorder(int x)
+		{
+			var sampleRight = _size.Width - 1;
+
+			return x < sampleRight;
+		}
+
+		private bool PositionNotOnTopBorder(int z)
+		{
+			return z >= 1;
+		}
+
+		private bool PositionNotOnSampleBottomBorder(int z)
+		{
+			var sampleBottom = _size.Height - 1;
+
+			return z < sampleBottom;
+		}
+
+		private Vector3 AddNormalToVectorSum(Vector3 sum, XYZType normal)
+		{
+			var newSum = new Vector3()
+			{
+				X = sum[0] + normal.x,
+				Y = sum[1] + normal.y,
+				Z = sum[2] + normal.z
+			};
+
+			return newSum;
+		}
+
+		private XYZType[] GetNewNormals()
+		{
+			var sampleHeight = _size.Height - 1;
+			var sampleWidth = _size.Width - 1;
+
+			var normals = new XYZType[sampleHeight * sampleWidth];
+
+			for (var z = 0; z < sampleHeight; ++z)
+			{
+				for (var x = 0; x < sampleWidth; ++x)
 				{
-					int index1 = (j * _size.Height) + i;
-					int index2 = (j * _size.Height) + (i + 1);
-					int index3 = ((j + 1) * _size.Height) + i;
+					var normal = GetNormalForPosition(x, z);
 
-					// Get three vertices from the face.
-					vertex1.X = HeightMap[index1].x;
-					vertex1.Y = HeightMap[index1].y;
-					vertex1.Z = HeightMap[index1].z;
+					var sampleIndex = (z * sampleHeight) + x;
 
-					vertex2.X = HeightMap[index2].x;
-					vertex2.Y = HeightMap[index2].y;
-					vertex2.Z = HeightMap[index2].z;
-
-					vertex3.X = HeightMap[index3].x;
-					vertex3.Y = HeightMap[index3].y;
-					vertex3.Z = HeightMap[index3].z;
-
-					// Calculate the two vectors for this face.
-					vector1 = vertex1 - vertex3;
-					vector2 = vertex3 - vertex2;
-
-					index = (j * (_size.Height - 1)) + i;
-
-					// Calculate the cross product of those two vectors to get the un-normalized value for this face normal.
-					Vector3 vecTestCrossProduct = Vector3.Cross(vector1, vector2);
-					normals[index].x = vecTestCrossProduct.X;
-					normals[index].y = vecTestCrossProduct.Y;
-					normals[index].z = vecTestCrossProduct.Z;
+					normals[sampleIndex] = normal;
 				}
 			}
 
-			// Now go through all the vertices and take an average of each face normal 	
-			// that the vertex touches to get the averaged normal for that vertex.
-			for (int j = 0; j < _size.Height; j++)
+			return normals;
+		}
+
+		private Dictionary<Coordinate2D<int>, XYZType> _cachedNormals;
+
+		private XYZType GetCachedNormalForPosition(int x, int z)
+		{
+			var cachedNormalExists = _cachedNormals.Any(e => e.Key.X == x && e.Key.Y == z);
+
+			if (!cachedNormalExists)
 			{
-				for (int i = 0; i < _size.Width; i++)
+				var normal = GetNormalForPosition(x, z);
+
+				_cachedNormals.Add(new Coordinate2D<int>(x, z), normal);
+			}
+
+			return _cachedNormals.First(e => e.Key.X == x && e.Key.Y == z).Value;
+		}
+
+		private bool UpdateNormal(int x, int z)
+		{
+			var sampleHeight = _size.Height - 1;
+
+			var sum = Vector3.Zero;
+
+			var count = 9;
+
+			if (PositionNotOnLeftBorder(x) && PositionNotOnTopBorder(z))
+			{
+				var topLeft = GetCachedNormalForPosition(x - 1, z - 1);
+				sum = AddNormalToVectorSum(sum, topLeft);
+				count++;
+			}
+
+			if (PositionNotOnSampleRightBorder(x) && PositionNotOnTopBorder(z))
+			{
+				var topRight = GetCachedNormalForPosition(x + 1, z - 1);
+				sum = AddNormalToVectorSum(sum, topRight);
+				count++;
+			}
+
+			if (PositionNotOnLeftBorder(x) && PositionNotOnSampleBottomBorder(z))
+			{
+				var bottomLeft = GetCachedNormalForPosition(x - 1, z + 1);
+				sum = AddNormalToVectorSum(sum, bottomLeft);
+				count++;
+			}
+
+			if (PositionNotOnSampleRightBorder(x) && PositionNotOnSampleBottomBorder(z))
+			{
+				var bottomRight = GetCachedNormalForPosition(x + 1, z + 1);
+				sum = AddNormalToVectorSum(sum, bottomRight);
+				count++;
+			}
+
+			sum.X = sum.X / count;
+			sum.Y = sum.Y / count;
+			sum.Z = sum.Z / count;
+
+			var index = GetIndexFromPosition(x, z);
+
+			var length = sum.Length();
+
+			ChangeNormal(index, sum.X / length, sum.Y / length, sum.Z / length);
+
+			return true;
+		}
+
+		private bool UpdateNormals(XYZType[] normals)
+		{
+			var actualHeight = _size.Height;
+			var actualWidth = _size.Width;
+
+			var sampleHeight = actualHeight - 1;
+			var sampleWidth = actualWidth - 1;
+
+			for (var z = 0; z < actualHeight; ++z)
+			{
+				for (var x = 0; x < actualWidth; ++x)
 				{
-					// Initialize the sum.
-					sum = Vector3.Zero;
+					var sum = Vector3.Zero;
 
-					// Initialize the count.
-					int count = 9;
+					var count = 9;
 
-					// Bottom left face.
-					if (((i - 1) >= 0) && ((j - 1) >= 0))
+					if (PositionNotOnLeftBorder(x) && PositionNotOnTopBorder(z))
 					{
-						index = ((j - 1) * (_size.Height - 1)) + (i - 1);
-
-						sum[0] += normals[index].x;
-						sum[1] += normals[index].y;
-						sum[2] += normals[index].z;
-						count++;
-					}
-					// Bottom right face.
-					if ((i < (_size.Width - 1)) && ((j - 1) >= 0))
-					{
-						index = ((j - 1) * (_size.Height - 1)) + i;
-
-						sum[0] += normals[index].x;
-						sum[1] += normals[index].y;
-						sum[2] += normals[index].z;
-						count++;
-					}
-					// Upper left face.
-					if (((i - 1) >= 0) && (j < (_size.Height - 1)))
-					{
-						index = (j * (_size.Height - 1)) + (i - 1);
-
-						sum[0] += normals[index].x;
-						sum[1] += normals[index].y;
-						sum[2] += normals[index].z;
-						count++;
-					}
-					// Upper right face.
-					if ((i < (_size.Width - 1)) && (j < (_size.Height - 1)))
-					{
-						index = (j * (_size.Height - 1)) + i;
-
-						sum.X += normals[index].x;
-						sum.Y += normals[index].y;
-						sum.Z += normals[index].z;
+						var topLeft = ((z - 1) * sampleHeight) + x - 1;
+						sum = AddNormalToVectorSum(sum, normals[topLeft]);
 						count++;
 					}
 
-					// Take the average of the faces touching this vertex.
-					sum.X = (sum.X / (float)count);
-					sum.Y = (sum.Y / (float)count);
-					sum.Z = (sum.Z / (float)count);
+					if (PositionNotOnSampleRightBorder(x) && PositionNotOnTopBorder(z))
+					{
+						var topRight = ((z - 1) * sampleHeight) + x;
+						sum = AddNormalToVectorSum(sum, normals[topRight]);
+						count++;
+					}
 
-					// Calculate the length of this normal.
-					length = (float)Math.Sqrt((sum.X * sum.X) + (sum.Y * sum.Y) + (sum.Z * sum.Z));
+					if (PositionNotOnLeftBorder(x) && PositionNotOnSampleBottomBorder(z))
+					{
+						var bottomLeft = (z * sampleHeight) + x - 1;
+						sum = AddNormalToVectorSum(sum, normals[bottomLeft]);
+						count++;
+					}
 
-					// Get an index to the vertex location in the height map array.
-					index = (j * _size.Height) + i;
+					if (PositionNotOnSampleRightBorder(x) && PositionNotOnSampleBottomBorder(z))
+					{
+						var bottomRight = (z * sampleHeight) + x;
+						sum = AddNormalToVectorSum(sum, normals[bottomRight]);
+						count++;
+					}
 
-					// Normalize the final shared normal for this vertex and store it in the height map array.
-					var editHeightMap = HeightMap[index];
-					editHeightMap.nx = (sum.X / length);
-					editHeightMap.ny = (sum.Y / length);
-					editHeightMap.nz = (sum.Z / length);
-					HeightMap[index] = editHeightMap;
+					sum.X = sum.X / count;
+					sum.Y = sum.Y / count;
+					sum.Z = sum.Z / count;
+
+					var index = GetIndexFromPosition(x, z);
+
+					var length = sum.Length();
+
+					ChangeNormal(index, sum.X / length, sum.Y / length, sum.Z / length);
 				}
 			}
 
-			// Release the temporary normals.
 			normals = null;
 
 			return true;
+		}
+
+		private bool CalculateNormals()
+		{
+			var newNormals = GetNewNormals();
+
+			var result = UpdateNormals(newNormals);
+
+			return true;
+			
+			///////////////
+
+			//int index;
+			//float length;
+			//Vector3 vertex1, vertex2, vertex3, vector1, vector2, sum;
+			//var normals = new XYZType[(_size.Height - 1) * (_size.Width - 1)];
+			//
+			//for (int j = 0; j < (_size.Height - 1); j++)
+			//{
+			//	for (int i = 0; i < (_size.Width - 1); i++)
+			//	{
+			//		int index1 = (j * _size.Height) + i;		// center
+			//		int index2 = (j * _size.Height) + (i + 1);	// right
+			//		int index3 = ((j + 1) * _size.Height) + i;	// bottom
+			//
+			//		vertex1.X = HeightMap[index1].x;
+			//		vertex1.Y = HeightMap[index1].y;
+			//		vertex1.Z = HeightMap[index1].z;
+			//
+			//		vertex2.X = HeightMap[index2].x;
+			//		vertex2.Y = HeightMap[index2].y;
+			//		vertex2.Z = HeightMap[index2].z;
+			//
+			//		vertex3.X = HeightMap[index3].x;
+			//		vertex3.Y = HeightMap[index3].y;
+			//		vertex3.Z = HeightMap[index3].z;
+			//
+			//		vector1 = vertex1 - vertex3;
+			//		vector2 = vertex3 - vertex2;
+			//
+			//		index = (j * (_size.Height - 1)) + i;
+			//
+			//		Vector3 vecTestCrossProduct = Vector3.Cross(vector1, vector2);
+			//		normals[index].x = vecTestCrossProduct.X;
+			//		normals[index].y = vecTestCrossProduct.Y;
+			//		normals[index].z = vecTestCrossProduct.Z;
+			//	}
+			//}
+
+			// j = z (up/down)
+			// i = x (left/right)
+			//for (int j = 0; j < _size.Height; j++)
+			//{
+			//	for (int i = 0; i < _size.Width; i++)
+			//	{
+			//		sum = Vector3.Zero;
+			//
+			//		int count = 9;
+			//
+			//		if (((i - 1) >= 0) && ((j - 1) >= 0))	// not hard left & not hard top
+			//		{
+			//			index = ((j - 1) * (_size.Height - 1)) + (i - 1);
+			//
+			//			sum[0] += normals[index].x;
+			//			sum[1] += normals[index].y;
+			//			sum[2] += normals[index].z;
+			//			count++;
+			//		}
+			//		if ((i < (_size.Width - 1)) && ((j - 1) >= 0))	// not hard sample right & not hard top
+			//		{
+			//			index = ((j - 1) * (_size.Height - 1)) + i;
+			//
+			//			sum[0] += normals[index].x;
+			//			sum[1] += normals[index].y;
+			//			sum[2] += normals[index].z;
+			//			count++;
+			//		}
+			//		if (((i - 1) >= 0) && (j < (_size.Height - 1)))	// not hard left & not hard sample bottom
+			//		{
+			//			index = (j * (_size.Height - 1)) + (i - 1);
+			//
+			//			sum[0] += normals[index].x;
+			//			sum[1] += normals[index].y;
+			//			sum[2] += normals[index].z;
+			//			count++;
+			//		}
+			//		if ((i < (_size.Width - 1)) && (j < (_size.Height - 1)))	// not hard sample right & not hard sample bottom
+			//		{
+			//			index = (j * (_size.Height - 1)) + i;
+			//
+			//			sum.X += normals[index].x;
+			//			sum.Y += normals[index].y;
+			//			sum.Z += normals[index].z;
+			//			count++;
+			//		}
+			//
+			//		sum.X = sum.X / count;
+			//		sum.Y = sum.Y / count;
+			//		sum.Z = sum.Z / count;
+			//
+			//		length = (float)Math.Sqrt((sum.X * sum.X) + (sum.Y * sum.Y) + (sum.Z * sum.Z));
+			//
+			//		index = (j * _size.Height) + i;
+			//
+			//		var editHeightMap = HeightMap[index];
+			//		editHeightMap.nx = (sum.X / length);
+			//		editHeightMap.ny = (sum.Y / length);
+			//		editHeightMap.nz = (sum.Z / length);
+			//		HeightMap[index] = editHeightMap;
+			//	}
+			//}
+			//
+			//normals = null;
+			//
+			//return true;
 		}
 
 		private bool LoadHeightMap(string heightMapFileName)

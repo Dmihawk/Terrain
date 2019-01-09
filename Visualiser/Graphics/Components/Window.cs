@@ -166,6 +166,46 @@ namespace Visualiser.Graphics
 			return result;
 		}
 
+		private Coordinate2D<float> FindRayIntersectionPoint()
+		{
+			var inverseViewMatrix = Matrix.Invert(_camera.ViewMatrix);
+			var direction = new Vector3()
+			{
+				X = inverseViewMatrix.M31,
+				Y = inverseViewMatrix.M32,
+				Z = inverseViewMatrix.M33
+			};
+
+			_quadTree.GetHeightAtPosition(_camera.Position.X, _camera.Position.Z, out float playerHeight);
+			playerHeight += 2.0f;
+
+			var origin = new Vector3(_camera.Position.X, playerHeight, _camera.Position.Z);
+
+			var unitDirection = Vector3.Normalize(direction) / 5;
+
+			var testDistance = 0.1f;
+			var intersectionFound = false;
+
+			Coordinate2D<float> intersection = null;
+
+			while (!intersectionFound && testDistance < 40.0f)
+			{
+				var currentLocation = origin + (unitDirection * testDistance);
+
+				var heightFound = _quadTree.GetHeightAtPosition(currentLocation.X, currentLocation.Z, out float height);
+
+				if (heightFound && height > currentLocation.Y)
+				{
+					intersection = new Coordinate2D<float>(currentLocation.X, currentLocation.Z);
+					intersectionFound = true;
+				}
+
+				testDistance += 0.1f;
+			}
+
+			return intersection;
+		}
+
 		private bool HandleInput(float frameTime, float heightDifference)
 		{
 			_player.Update(frameTime, heightDifference, new MovementInput()
@@ -193,8 +233,14 @@ namespace Visualiser.Graphics
 
 			if (_input.IsKeyPressed(Key.Q))
 			{
-				_terrain.ChangeHeightAtPosition(_directX.Device, (int)_player.Position.X, (int)_player.Position.Z, -1.0f);
-				_quadTree.Initialise(_terrain, _directX.Device);
+				var intersection = FindRayIntersectionPoint();
+
+				if (intersection != null)
+				{
+					//_terrain.ChangeHeightAtPosition(_directX.Device, (int)_player.Position.X, (int)_player.Position.Z, -1.0f);
+					_terrain.ChangeHeightAtPosition(_directX.Device, (int)intersection.X, (int)intersection.Y, -1.0f);
+					//_quadTree.Initialise(_terrain, _directX.Device);
+				}
 			}
 
 			return !_input.IsKeyPressed(Key.Escape);

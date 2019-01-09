@@ -9,7 +9,7 @@ namespace Visualiser.Utilities
 {
 	public static class Settings
 	{
-		public static Dimension ScreenSize = new Dimension(1920, 1080);
+		public static Dimension ScreenSize = new Dimension(1280, 720);
 		public static TimeSpan LengthOfDay = TimeSpan.FromMinutes(5);
 	}
 }
